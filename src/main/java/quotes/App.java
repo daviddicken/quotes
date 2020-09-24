@@ -12,48 +12,114 @@ import java.util.Random;
 public class App {
 
     public static void main(String[] args) throws Exception {
-        try{
-            System.out.println(qouteOfTheDay());
-        }catch(Exception e){
-            System.out.println("had a issue");
+        String searchWord;
+
+        if(args.length == 2){ //check if two args were passed in
+            searchWord = args[1].toLowerCase(); //convert search word to lowercase
+
+            if(args[0].toLowerCase().equals("author")) { //if first args is author send to authorQ
+                System.out.println(authorQ(searchWord));
+            }else if(args[0].toLowerCase().equals("contains")){ //if first arg is contains send to wordQ
+                System.out.println(wordQ(searchWord));
+            }else{ //if args doesn't match send message to user
+                System.out.println("To search for a quote from a author or a quote that contains a key word\nPlease enter either \"author\" or \"contains\" as your first argument \nand your search word or author as your second argument\nYou can also run this program without any arguments to get a random quote. Please enjoy this quote for now:\n");
+                System.out.println(randomQ());
+            }
+        }
+
+        if(args.length > 2){ //if to many args are passed in send message to user
+            System.out.println("Please only use two arguments with this program. \nIf the author or search phrase contains more the one word please enclose with \"\" example: 'author \"Cassandra Clare\"'\nYou can also run this program without any arguments to get a random quote. Please enjoy this quote for now:\n");
+            System.out.println(randomQ());
+        }
+
+        if(args.length == 0){ //if no args are entered give random quote
+            System.out.println(randomQ());
         }
     }
+ //==========================================
+ public static String getRandomQuote(ArrayList<Quote> theList){
+     Random rand = new Random();
+     int index = rand.nextInt(theList.size());
 
+     return theList.get(index).toString();
+ }
 
-    public static String qouteOfTheDay() throws Exception {
-        File file = new File("src/main/resources/recentqoutes.json" );
+//============================================
+    public static String randomQ() throws Exception {
+        return getRandomQuote(getList());
+    }
+
+//==========================================
+    public static String wordQ(String searchWord) throws Exception{
+        ArrayList<Quote> wisdom = getList();
+        ArrayList<Quote> searched = new ArrayList<>();
+
+        for(Quote words : wisdom){
+            if(words.getQoute().toLowerCase().contains(searchWord)){
+                searched.add(words);
+            }
+        }
+        if(searched.size() > 0){
+            return getRandomQuote(searched);
+        }
+        String returnString = String.format("We were unable to find any quotes that contained %s but check out this quote\n", searchWord);
+        returnString += getRandomQuote(wisdom);
+
+        return returnString;
+    }
+
+//===========================================
+    public static String authorQ(String searchAuthor) throws Exception{
+        ArrayList<Quote> wisdom = getList();
+        ArrayList<Quote> searched = new ArrayList<>();
+
+        for(Quote speaker : wisdom) {
+            if (speaker.getAuthor().toLowerCase().equals(searchAuthor)) {
+                searched.add(speaker);
+            }
+        }
+        if(searched.size() > 0){
+            return getRandomQuote(searched);
+        }
+
+        String returnString = String.format("We were unable to find any quotes from the %s, but check out this quote:\n", searchAuthor);
+        returnString += getRandomQuote(wisdom);
+
+        return returnString;
+    }
+
+//===========================================
+    public static ArrayList<Quote> getList() throws Exception {
+
+        File file = new File("src/main/resources/recentquotes.json");
         JsonReader jsReader = new JsonReader(new FileReader(file));
 
-        ArrayList<Qoute> arrayOfQuotes = new ArrayList<>();
+        ArrayList<Quote> arrayOfQuotes = new ArrayList<>();
 
         //--------------------------------------
         // This block of code is thanks to Peyton who cracked the docs to figure out how to make this work
         jsReader.beginArray();       // look for beginning of array char [
-        while(jsReader.hasNext()){   // check to make sure another obj exist
+        while (jsReader.hasNext()) {   // check to make sure another obj exist
             String author = null;    // reset variable to null
             String text = null;
 
             jsReader.beginObject();  // look for beginning of obj char {
-            while(jsReader.hasNext()){ // check that another line exist in obj
+            while (jsReader.hasNext()) { // check that another line exist in obj
                 String name = jsReader.nextName(); // store next key in variable
-                if(name.equals("author"))          // check if key matches a key we need for constructor
+                if (name.equals("author"))          // check if key matches a key we need for constructor
                     author = jsReader.nextString();// if found store value in variable
-                else if(name.equals("text"))
+                else if (name.equals("text"))
                     text = jsReader.nextString();
                 else
                     jsReader.skipValue(); // if not a key we need skip
             }
             jsReader.endObject();        // look for end of obj char }
-            Qoute qoute = new Qoute(text, author); // create new quote with variables
-            arrayOfQuotes.add(qoute);// add quote to array
+            Quote quote = new Quote(author, text); // create new quote with variables
+            arrayOfQuotes.add(quote);// add quote to array
         }
         jsReader.endArray();
         jsReader.close();
-//---------------------------------------------------
-       Random rand = new Random();
-       int index = rand.nextInt(arrayOfQuotes.size());
-
-
-    return arrayOfQuotes.get(index).toString();
+        return arrayOfQuotes;
     }
 }
+

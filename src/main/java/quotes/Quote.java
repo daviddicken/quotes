@@ -1,10 +1,10 @@
 package quotes;
 
-public class Qoute {
+public class Quote {
     private String author;
     private String text;
 
-    public Qoute(String author, String text) {
+    public Quote(String author, String text) {
         this.author = author;
         this.text = text;
     }
