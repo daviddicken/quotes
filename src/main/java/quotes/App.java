@@ -17,32 +17,36 @@ import java.util.Random;
 public class App {
 
     public static void main(String[] args) throws Exception {
-        String searchWord;
-            pingApi();
-            
+        String availableArgs = "Possible arguments first arguments are [author : contains : web ] \nIf you chose to search by author or contains you need to enter the authors name or a key word or phrase as the second argument.\nIf you search phrase or author's name has any spaces please enclose with \"\" example:'author \"Cassandra Clare\"'\nYou can also enter web as the only argument to get a random quote from the web.\nOr don't enter any arguments to grab a random quote from your pc.\n";
+        String enjoy = "Please enjoy this quote for now:\n";
 
-        if(args.length == 2){ //check if two args were passed in
-            searchWord = args[1].toLowerCase(); //convert search word to lowercase
-
-            if(args[0].toLowerCase().equals("author")) { //if first args is author send to authorQ
-                System.out.println(authorQ(searchWord));
-            }else if(args[0].toLowerCase().equals("contains")){ //if first arg is contains send to wordQ
-                System.out.println(wordQ(searchWord));
-            }else{ //if args doesn't match send message to user
-                System.out.println("To search for a quote from a author or a quote that contains a key word\nPlease enter either \"author\" or \"contains\" as your first argument \nand your search word or author as your second argument\nYou can also run this program without any arguments to get a random quote. Please enjoy this quote for now:\n");
+        if (args.length > 0) {
+            if (args.length > 2) {
+                System.out.println(availableArgs + enjoy);
+                System.out.println(randomQ());
+            }else if(args[0].toLowerCase().equals("web")){
+                pingApi();
+            }else if(args.length > 1) {
+                switch (args[0].toLowerCase()) {
+                    case "author":
+                            System.out.println(authorQ(args[1]).toLowerCase());
+                        break;
+                    case "contains":
+                            System.out.println(wordQ(args[1].toLowerCase()));
+                        break;
+                    default:
+                        System.out.println(availableArgs + enjoy);
+                        System.out.println(randomQ());
+                }
+            }else{
+                System.out.println(availableArgs + enjoy);
                 System.out.println(randomQ());
             }
-        }
-
-        if(args.length > 2){ //if to many args are passed in send message to user
-            System.out.println("Please only use two arguments with this program. \nIf the author or search phrase contains more the one word please enclose with \"\" example: 'author \"Cassandra Clare\"'\nYou can also run this program without any arguments to get a random quote. Please enjoy this quote for now:\n");
-            System.out.println(randomQ());
-        }
-
-        if(args.length == 0){ //if no args are entered give random quote
+        } else {
             System.out.println(randomQ());
         }
     }
+
  //==========================================
  public static String getRandomQuote(ArrayList<Quote> theList){
      Random rand = new Random();
@@ -81,7 +85,7 @@ public class App {
         ArrayList<Quote> searched = new ArrayList<>();
 
         for(Quote speaker : wisdom) {
-            if (speaker.getAuthor().toLowerCase().equals(searchAuthor)) {
+            if (speaker.getAuthor().toLowerCase().contains(searchAuthor)) {
                 searched.add(speaker);
             }
         }
@@ -89,7 +93,7 @@ public class App {
             return getRandomQuote(searched);
         }
 
-        String returnString = String.format("We were unable to find any quotes from the %s, but check out this quote:\n", searchAuthor);
+        String returnString = String.format("We were unable to find any quotes from %s, but check out this quote:\n", searchAuthor);
         returnString += getRandomQuote(wisdom);
 
         return returnString;
@@ -137,7 +141,6 @@ public class App {
 
     }
 
-
 //===========================================
     public static ArrayList<Quote> getList() throws Exception {
         File file = new File("src/main/resources/recentquotes.json");
@@ -155,7 +158,7 @@ public class App {
             jsReader.beginObject();  // look for beginning of obj char {
             while (jsReader.hasNext()) { // check that another line exist in obj
                 String name = jsReader.nextName(); // store next key in variable
-                if (name.equals("author") || name.equals(("quoteAuthor")))          // check if key matches a key we need for constructor
+                if (name.equals("author") || name.equals(("quoteAuthor")))// check if key matches a key we need for constructor
                     author = jsReader.nextString();// if found store value in variable
                 else if (name.equals("text") || name.equals("quoteText"))
                     text = jsReader.nextString();
