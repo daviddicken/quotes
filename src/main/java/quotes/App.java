@@ -3,9 +3,14 @@
  */
 package quotes;
 
+import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -13,6 +18,8 @@ public class App {
 
     public static void main(String[] args) throws Exception {
         String searchWord;
+            pingApi();
+            
 
         if(args.length == 2){ //check if two args were passed in
             searchWord = args[1].toLowerCase(); //convert search word to lowercase
@@ -88,9 +95,51 @@ public class App {
         return returnString;
     }
 
+ //=========================================
+  public static void pingApi() throws Exception {
+
+     try {
+          URL url = new URL("http://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=en");
+          HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+          connection.setRequestMethod("GET");
+          BufferedReader potato = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+          String aLine = potato.readLine();
+
+          saveQuote(aLine);
+          webQuote(aLine);
+     }catch (Exception e){
+         System.out.println(randomQ());
+     }
+  }
+
+  //========================================
+    public static void saveQuote(String quoteJson) throws IOException {
+
+        String path = "src/main/resources/recentquotes.json";
+        String guts = Files.readString(Paths.get(path));
+
+        guts = guts.substring(0, guts.length() -1);
+        guts += String.format(",%s\n]", quoteJson);
+
+       BufferedWriter writer = new BufferedWriter(new FileWriter(path));
+       writer.write(guts);
+
+        writer.close();
+    }
+
+  //=========================================
+    public static void webQuote(String theQuote){
+        Gson gson = new Gson();
+        ApiQuote potato = gson.fromJson(theQuote, ApiQuote.class);
+
+        System.out.println(potato);
+
+    }
+
+
 //===========================================
     public static ArrayList<Quote> getList() throws Exception {
-
         File file = new File("src/main/resources/recentquotes.json");
         JsonReader jsReader = new JsonReader(new FileReader(file));
 
@@ -106,9 +155,9 @@ public class App {
             jsReader.beginObject();  // look for beginning of obj char {
             while (jsReader.hasNext()) { // check that another line exist in obj
                 String name = jsReader.nextName(); // store next key in variable
-                if (name.equals("author"))          // check if key matches a key we need for constructor
+                if (name.equals("author") || name.equals(("quoteAuthor")))          // check if key matches a key we need for constructor
                     author = jsReader.nextString();// if found store value in variable
-                else if (name.equals("text"))
+                else if (name.equals("text") || name.equals("quoteText"))
                     text = jsReader.nextString();
                 else
                     jsReader.skipValue(); // if not a key we need skip
